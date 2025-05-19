@@ -1,0 +1,33 @@
+<!-- contenedor principal -->
+<div class="main-container">
+    <!-- contenido principal a la derecha -->
+    <div class="main-content">
+      <!-- lo que quieras mostrar al lado de las cards -->
+          <img [src]="finalVideoUrl" alt="Client 1" />
+    </div>
+  <!-- barra lateral izquierda -->
+  <div class="sidebar">
+    <div><h2>Videos disponibles</h2></div>
+    <div class="card-list">
+      <ion-col
+        *ngFor="let client of clientImagesArray(); trackBy: trackByClientId"
+        class="card-wrapper"
+      >
+        <ion-card>
+          <img *ngIf="client.imageUrl; else loading" [src]="client.imageUrl" />
+          <ng-template #loading>
+            <div class="spinner-container">
+              <ion-spinner color="secondary"></ion-spinner>
+            </div>
+          </ng-template>
+          <ion-card-content>
+            <p>Cliente: {{ client.clientId }}</p>
+            <p>Status: {{ client.active ? 'Activo' : 'Inactivo' }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </div>
+  </div>
+
+
+</div>

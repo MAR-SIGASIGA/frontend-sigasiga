@@ -1,0 +1,6 @@
+{
+  "apiWsUrl": "$API_WS_URL",
+  "apiSioUrl": "$API_SIO_URL",
+  "apiRestURL": "$API_REST_URL",
+  "production": "$PRODUCTION"
+}
