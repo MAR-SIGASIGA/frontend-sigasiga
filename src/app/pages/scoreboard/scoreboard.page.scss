@@ -1,0 +1,42 @@
+.timer {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+  
+  .score-text {
+    font-size: 3rem;
+    font-weight: bold;
+  }
+
+  .circular-button {
+    --border-radius: 50%;
+    --padding-start: 0;
+    --padding-end: 0;
+    width: 40px;
+    height: 40px;
+
+    font-size: 16px;
+  }
+
+  .main-container {
+    max-width: 560px;
+    height: 100%;
+    margin: 0 auto;
+  }
+  
+  ion-card {
+    background: rgba(255, 255, 255, 0.05); /* Fondo translúcido */
+    backdrop-filter: blur(8px);           /* Efecto de desenfoque */
+    -webkit-backdrop-filter: blur(8px);   /* Soporte para Safari */
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borde tenue */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  @media (max-width: 480px) {
+    .circular-button {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+  }

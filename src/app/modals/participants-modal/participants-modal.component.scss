@@ -1,0 +1,52 @@
+ion-card {
+    background-color: #000; // resalta el efecto
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding-top: 20px;
+  }
+
+.neon-border {
+    border: 2px solid #00a2ff93;
+    border-radius: 12px;
+    box-shadow:
+      0 0 2px #00a2ff93,
+      0 0 4px #00a2ff93,
+      0 0 8px #00a2ff93,
+      0 0 16px #00a2ff93;
+    background-color: #000; // resalta el efecto
+
+    display: block;
+    margin: 4px auto;
+    max-width: 100%;
+  }
+  .url-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+  
+  .url-link {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    flex: 2;
+    color: #0066ffea;
+    text-decoration: underline;
+  }
+  ::ng-deep .p-toast {
+    width: 400px; /* ancho que quieras */
+    max-width: 90vw; /* para que no exceda ancho de pantalla */
+    font-size: 1.2rem; /* tamaño del texto */
+    /* Podés agregar más estilos como altura, padding, etc */
+  }
+  
+  
+  @media (max-width: 768px) {
+    .neon-border {
+      max-width: 85%;
+    }
+  }

@@ -1,0 +1,44 @@
+<div class="main-container">
+  <div class="main-content">
+    <canvas #finalVideoCanvas></canvas>
+  </div>
+
+  <div class="sidebar">
+    <div style="text-align: center;"><h2>Videos disponibles</h2></div>
+    <div class="card-list">
+      <ion-col
+        *ngFor="let client of clientImagesArray(); trackBy: trackByClientId"
+        class="card-wrapper"
+      >
+        <ion-card>
+          <canvas #clientCanvas *ngIf="!client.isLoading; else loading"></canvas>
+          <ng-template #loading>
+            <div class="spinner-container">
+              <ion-spinner color="secondary"></ion-spinner>
+            </div>
+          </ng-template>
+          <ion-card-content>
+            <!-- Usamos ion-row para dividir en dos columnas -->
+            <ion-row>
+              <!-- Columna para el cliente y el status -->
+              <ion-col size="8">
+                <p>Cliente: {{ client.clientId }}</p>
+                <p>Status: {{ client.active ? 'Activo' : 'Inactivo' }}</p>
+              </ion-col>
+  
+              <!-- Columna para el toggle, alineada a la derecha -->
+              <ion-col size="4" class="toggle-column" >
+                  <ion-toggle
+                    *ngIf="!client.isLoading"
+                    [(ngModel)]="client.active"
+                    (ionChange)="toggleVideoSource(client.clientId, client.active)"
+                    [checked]="client.active"
+                  ></ion-toggle>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </div>
+  </div>
+</div>

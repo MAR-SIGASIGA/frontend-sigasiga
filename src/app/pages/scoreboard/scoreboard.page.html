@@ -1,0 +1,126 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title class="ion-text-center">Marcador</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="main-container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="ion-text-center">Tiempo del partido</ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="ion-text-center">
+        <h1 class="timer">00:00.0</h1>
+        <ion-buttons class="ion-justify-content-center">
+          <ion-button color="primary" fill="solid">
+            <ion-icon name="play" slot="icon-only"></ion-icon>
+          </ion-button>
+          <ion-button color="primary" fill="solid">
+            <ion-icon name="pause" slot="icon-only"></ion-icon>
+          </ion-button>
+          <ion-button color="primary" fill="solid">
+            <ion-icon name="settings" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-card-content>
+    </ion-card>
+  
+    <ion-grid>
+      <ion-row class="ion-no-padding ion-no-margin">
+        <ion-col size="6" class="ion-no-padding ion-no-margin">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-subtitle class="ion-text-center">LOCAL</ion-card-subtitle>
+              <ion-card-title class="score-text ion-text-center">{{ localScore }}</ion-card-title>
+            </ion-card-header>
+        
+            <ion-card-content>
+              <!-- Primera fila de botones +1, +2, +3 -->
+              <ion-grid>
+                <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center" >
+                    <ion-button color="primary" (click)="addPoints('local', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="primary" (click)="addPoints('local', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="primary" (click)="addPoints('local', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                  </ion-col>
+                </ion-row>
+        
+                <!-- Segunda fila de botones duplicados (si los necesitas para otra acción) -->
+                <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('local', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('local', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('local', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+        
+            <ion-footer class="ion-text-center">
+              <ion-label>Faltas</ion-label>
+              <ion-button fill="clear" (click)="modifyFoul('local', -1)">-</ion-button>
+              {{ localFouls }}
+              <ion-button fill="clear" (click)="modifyFoul('local', 1)">+</ion-button>
+            </ion-footer>
+          </ion-card>
+        </ion-col>
+  
+        <ion-col size="6" class="ion-no-padding ion-no-margin">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-subtitle class="ion-text-center">VISITANTE</ion-card-subtitle>
+              <ion-card-title class="score-text ion-text-center">{{ visitanteScore }}</ion-card-title>
+            </ion-card-header>
+        
+            <ion-card-content>
+              <!-- Primera fila de botones +1, +2, +3 -->
+              <ion-grid>
+                <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="primary" (click)="addPoints('visitante', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="primary" (click)="addPoints('visitante', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="primary" (click)="addPoints('visitante', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                  </ion-col>
+                </ion-row>
+        
+                <!-- Segunda fila de botones duplicados (si los necesitas para otra acción) -->
+                <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('visitante', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('visitante', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                  </ion-col>
+                  <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
+                    <ion-button color="secondary" (click)="addPoints('visitante', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+        
+            <ion-footer class="ion-text-center">
+              <ion-label>Faltas</ion-label>
+              <ion-button fill="clear" (click)="modifyFoul('visitante', -1)">-</ion-button>
+              {{ visitanteFouls }}
+              <ion-button fill="clear" (click)="modifyFoul('visitante', 1)">+</ion-button>
+            </ion-footer>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+  
+</ion-content>

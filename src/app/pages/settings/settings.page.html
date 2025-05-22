@@ -1,0 +1,90 @@
+<ion-header [translucent]="true">
+  <p-toast></p-toast>
+  <ion-toolbar>
+    <ion-title>
+      Tab2
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Tab2</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <div class="main-container">
+  <ion-content class="ion-padding">
+
+    <!-- Contenedor 1: Configuración de Streaming -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="settings-outline" color="medium" slot="start"></ion-icon>
+          Configuración de Streaming
+        </ion-card-title>
+      </ion-card-header>
+  
+      <ion-card-content>
+        <!-- Fila 1: RTMP Key -->
+        <ion-item lines="none" class="input-row">
+          <ion-icon name="key-outline" slot="start" color="medium"></ion-icon>
+        
+          <ion-label position="close"><h2>RTMP Key</h2></ion-label>
+        </ion-item>
+        <ion-item>
+          <div class="input-with-button">
+            <ion-input
+              [(ngModel)]="rtmpKey"
+              placeholder="Introduce tu RTMP key"
+              class="custom-input"
+            ></ion-input>
+        
+            <ion-button
+              fill="clear"
+              shape="round"
+              color="primary"
+              (click)="enviarRTMPKey()"
+              class="send-btn"
+            >
+              <ion-icon name="send-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+        <!-- Fila 2: Transmitir en YouTube -->
+        <ion-item lines="none">
+          <ion-icon name="logo-youtube" slot="start" color="medium"></ion-icon>
+          <ion-label>Transmitir en Vivo por RTMP</ion-label>
+        </ion-item>
+        <ion-item >
+          <ion-label *ngIf="!youtubeToggle" position="close">Comenzar transmisión</ion-label>
+          <ion-label *ngIf="youtubeToggle" position="close">Detener transmisión</ion-label>
+          <ion-toggle slot="end" [(ngModel)]="youtubeToggle" (ionChange)="toggleYoutube()"></ion-toggle>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+  
+    <!-- Contenedor 2: Configuración de Participantes -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="people-outline" color="medium" slot="start"></ion-icon>
+          Configuración de Participantes
+        </ion-card-title>
+      </ion-card-header>
+  
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-icon name="person-add-outline" slot="start" color="medium"></ion-icon>
+          <ion-label>Participantes</ion-label>
+          <ion-button fill="clear" shape="round" color="primary" slot="end" (click)="openParticipantsModal()">
+            <ion-icon name="open-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+  
+  </ion-content>
+</div>
+  
+</ion-content>

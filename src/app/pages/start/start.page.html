@@ -1,0 +1,28 @@
+<ion-content class="ion-padding">
+  <div class="content-container">
+    <img src="assets/logo_no_bg.png" alt="Logo" class="logo" />
+
+    <p-dropdown
+      [options]="sports"
+      [(ngModel)]="selectedSport"
+      optionLabel="name"
+      placeholder="Seleccionar deporte"
+      class="custom-dropdown">
+    </p-dropdown>
+
+    <p-button
+      (onClick)="confirmSelection()" 
+      [disabled]="!selectedSport || isLoading" 
+      severity="info"
+      [rounded]="true"
+      icon="pi pi-play"
+      [outlined]="true"
+      [raised]="true"
+      label="Iniciar evento"
+      class="custom-button"
+      >
+    </p-button>
+
+
+  </div>
+</ion-content>

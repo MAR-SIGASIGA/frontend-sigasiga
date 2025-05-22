@@ -1,0 +1,48 @@
+<ion-header>
+  <p-toast></p-toast>
+  <ion-toolbar>
+    <ion-title>Participantes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content" fullscreen>
+  <ion-list *ngIf="participants?.length; else noParticipants">
+    <ng-container *ngFor="let p of participants">
+      <!-- Fila con el participante -->
+      <ion-item>
+        <ion-label>
+          <p>{{ p.user_id }}</p>
+        </ion-label>
+        <ion-button fill="outline" slot="end" (click)="viewDetails(p)">
+          {{ expandedParticipantId === p.user_id ? 'Ocultar' : 'Ver detalles' }}
+        </ion-button>
+      </ion-item>
+
+      <!-- Detalles expandibles debajo -->
+      <ion-card *ngIf="expandedParticipantId === p.user_id" class="ion-margin translucent-card">
+        <img class="neon-border" [src]="getRestUrl() + '/config/join_qr_img_bytes?user_id=' + p.user_id + '&token=' + getToken()" alt="QR" />
+        <ion-card-content class="url-container">
+          <div class="url-wrapper">
+            <a [href]="p.join_url" target="_blank" rel="noopener noreferrer" class="url-link">
+              {{ p.join_url }}
+            </a>
+            <ion-button fill="clear" size="small" (click)="copyToClipboard(p.join_url)">
+              <ion-icon slot="icon-only" name="copy-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ng-container>
+  </ion-list>
+
+  <ng-template #noParticipants>
+    <p>No hay participantes.</p>
+  </ng-template>
+
+  <ion-button expand="full" class="ion-margin-top" (click)="addParticipant()">
+    Añadir participante
+  </ion-button>
+</ion-content>

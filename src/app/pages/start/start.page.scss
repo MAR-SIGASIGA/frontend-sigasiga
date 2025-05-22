@@ -1,0 +1,100 @@
+.content-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%; /* ocupa toda la altura disponible */
+    gap: 1.5rem;  /* espacio entre dropdown y botón */
+  }
+  
+  /* Tus estilos existentes para logo, dropdown y botón */
+  .logo {
+    width: 512px;       /* ajustá según tu imagen */
+    height: auto;
+    margin-bottom: 1rem;
+  
+    /* Animación fade-in hacia arriba */
+    opacity: 0;
+    animation-name: fadeInUp;
+    animation-fill-mode: forwards;
+    animation-duration: 0.6s;
+    animation-timing-function: ease-out;
+    animation-delay: 0.2s;
+  }
+  
+  .custom-dropdown {
+    width: 380px; /* ancho fijo */
+    border-color: rgba(0, 153, 255, 0.342);
+  
+    opacity: 0;
+    animation-name: fadeInUp;
+    animation-fill-mode: forwards;
+    animation-duration: 0.6s;
+    animation-timing-function: ease-out;
+    animation-delay: 0.8s;
+  }
+  
+  ::ng-deep .custom-dropdown.p-dropdown {
+    border: 1px solid rgba(0, 153, 255, 0.342);
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+  }
+  
+  ::ng-deep .custom-dropdown.p-dropdown:hover {
+    border-color: rgba(0, 153, 255, 0.808);
+  }
+  
+  ::ng-deep .custom-dropdown.p-dropdown:focus-within {
+    border-color: rgb(0, 195, 255);
+    box-shadow: 0 0 8px rgb(0, 195, 255, 0.5);
+  }
+
+  
+  .custom-button {
+    opacity: 0;
+    animation-name: fadeInUp;
+    animation-fill-mode: forwards;
+    animation-duration: 0.6s;
+    animation-timing-function: ease-out;
+    animation-delay: 1.4s;
+  }
+  
+  /* Estilo para el icono dentro del botón */
+  ::ng-deep .custom-button .p-button-icon {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    font-size: 1.5rem !important; /* tamaño más grande */
+  }
+  
+  ::ng-deep .p-toast {
+    width: 400px; /* ancho que quieras */
+    max-width: 90vw; /* para que no exceda ancho de pantalla */
+    font-size: 1.2rem; /* tamaño del texto */
+    /* Podés agregar más estilos como altura, padding, etc */
+  }
+  
+  /* Animación */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive */
+  @media (max-width: 512px) {
+    .logo {
+      width: 100%;
+      height: auto;
+    }
+    .custom-dropdown {
+      max-width: 380px;
+      width: 100%;
+    }
+  }
+  

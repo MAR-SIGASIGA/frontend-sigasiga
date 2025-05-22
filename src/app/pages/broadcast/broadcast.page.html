@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Transmisión de Cámara</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <video #video autoplay muted playsinline width="100%"></video>
+
+  <ion-button expand="block" color="primary" (click)="toggleStream()">
+    {{ isStreaming ? 'Detener Transmisión' : 'Iniciar Transmisión' }}
+  </ion-button>
+
+  <ion-item>
+    <ion-label>Resolución</ion-label>
+    <ion-select placeholder="100%" (ionChange)="updateResolution($event.detail.value)">
+      <ion-select-option [value]="1.0">100%</ion-select-option>
+      <ion-select-option [value]="0.75">75%</ion-select-option>
+      <ion-select-option [value]="0.5">50%</ion-select-option>
+      <ion-select-option [value]="0.25">25%</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Calidad</ion-label>
+    <ion-select placeholder="100%" (ionChange)="updateQuality($event.detail.value)">
+      <ion-select-option [value]="1.0">100%</ion-select-option>
+      <ion-select-option [value]="0.75">75%</ion-select-option>
+      <ion-select-option [value]="0.5">50%</ion-select-option>
+      <ion-select-option [value]="0.25">25%</ion-select-option>
+    </ion-select>
+  </ion-item>
+</ion-content>
