@@ -19,7 +19,7 @@ export const tabsRoutes: Routes = [
   },
   {
     path: '',
-    redirectTo: localStorage.getItem('token') ? 'settings' : 'broadcast',
+    redirectTo: localStorage.getItem('token') ? 'settings' : 'start',
     pathMatch: 'full',
   }
 ];

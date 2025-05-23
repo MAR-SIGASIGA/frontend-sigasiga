@@ -8,6 +8,7 @@ import { MessageService } from 'primeng/api';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
+import { EventLifecycleService } from '../../services/event-lifecycle.service';
 
 @Component({
   selector: 'app-start',
@@ -29,7 +30,8 @@ export class StartPage implements OnInit {
   constructor(private apiService: ApiSigasigaRestService, 
               private authService: AuthService, 
               private messageService: MessageService,
-              private router: Router) {}
+              private router: Router,
+              private eventLifecycleService: EventLifecycleService) {}
 
   ngOnInit() {
     this.loadSports();
@@ -70,6 +72,7 @@ export class StartPage implements OnInit {
           detail: 'Evento ' + res.event_id + ' en creación.',
           life: 3000,
         });
+        this.eventLifecycleService.startListening();
         this.router.navigate(['/tabs/settings']);
       },
       error: (err) => {

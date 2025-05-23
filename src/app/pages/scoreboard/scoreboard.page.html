@@ -13,14 +13,12 @@
       <ion-card-content class="ion-text-center">
         <h1 class="timer">00:00.0</h1>
         <ion-buttons class="ion-justify-content-center">
-          <ion-button color="primary" fill="solid">
-            <ion-icon name="play" slot="icon-only"></ion-icon>
+          <ion-button color="primary" fill="solid" shape="round" (click)="toogleTimerStatus()">
+            <ion-icon *ngIf="timerStatus" name="pause" slot="icon-only" size="small"></ion-icon>
+            <ion-icon *ngIf="!timerStatus" name="play" slot="icon-only" size="small"></ion-icon>
           </ion-button>
-          <ion-button color="primary" fill="solid">
-            <ion-icon name="pause" slot="icon-only"></ion-icon>
-          </ion-button>
-          <ion-button color="primary" fill="solid">
-            <ion-icon name="settings" slot="icon-only"></ion-icon>
+          <ion-button color="primary" fill="solid" shape="round" (click)="configTime()">
+            <ion-icon name="settings" slot="icon-only" size="small"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-card-content>
@@ -40,26 +38,26 @@
               <ion-grid>
                 <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center" >
-                    <ion-button color="primary" (click)="addPoints('local', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('local', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="primary" (click)="addPoints('local', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('local', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="primary" (click)="addPoints('local', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('local', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
                   </ion-col>
                 </ion-row>
         
                 <!-- Segunda fila de botones duplicados (si los necesitas para otra acción) -->
                 <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('local', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('local', -1)" size="small" shape="round" class="circular-button">-1</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('local', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('local', -2)" size="small" shape="round" class="circular-button">-2</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('local', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('local', -3)" size="small" shape="round" class="circular-button">-3</ion-button>
                   </ion-col>
                 </ion-row>
               </ion-grid>
@@ -86,26 +84,26 @@
               <ion-grid>
                 <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="primary" (click)="addPoints('visitante', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('visitor', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="primary" (click)="addPoints('visitante', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('visitor', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="primary" (click)="addPoints('visitante', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                    <ion-button color="primary" (click)="modifyPoints('visitor', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
                   </ion-col>
                 </ion-row>
         
                 <!-- Segunda fila de botones duplicados (si los necesitas para otra acción) -->
                 <ion-row class="ion-no-padding ion-no-margin ion-justify-content-center">
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('visitante', 1)" size="small" shape="round" class="circular-button">+1</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('visitor', -1)" size="small" shape="round" class="circular-button">-1</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('visitante', 2)" size="small" shape="round" class="circular-button">+2</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('visitor', -2)" size="small" shape="round" class="circular-button">-2</ion-button>
                   </ion-col>
                   <ion-col size="4" class="ion-no-padding ion-no-margin ion-text-center">
-                    <ion-button color="secondary" (click)="addPoints('visitante', 3)" size="small" shape="round" class="circular-button">+3</ion-button>
+                    <ion-button color="secondary" (click)="modifyPoints('visitor', -3)" size="small" shape="round" class="circular-button">-3</ion-button>
                   </ion-col>
                 </ion-row>
               </ion-grid>

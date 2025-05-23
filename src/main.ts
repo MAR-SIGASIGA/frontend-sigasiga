@@ -28,6 +28,7 @@ export function initApp(appConfig: AppConfigService) {
 
 bootstrapApplication(AppComponent, {
   providers: [
+    MessageService,
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(),
     provideIonicAngular(),
@@ -37,7 +38,6 @@ bootstrapApplication(AppComponent, {
         preset: Aura,
       },
     }),
-    { provide: MessageService, useClass: MessageService },
     AppConfigService,
     {
       provide: APP_INITIALIZER,

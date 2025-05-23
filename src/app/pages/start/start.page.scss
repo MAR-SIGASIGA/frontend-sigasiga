@@ -25,6 +25,7 @@
   .custom-dropdown {
     width: 380px; /* ancho fijo */
     border-color: rgba(0, 153, 255, 0.342);
+    z-index: 9999 !important; 
   
     opacity: 0;
     animation-name: fadeInUp;
@@ -35,7 +36,6 @@
   }
   
   ::ng-deep .custom-dropdown.p-dropdown {
-    border: 1px solid rgba(0, 153, 255, 0.342);
     border-radius: 4px;
     background-color: #0084ff07;
   }
@@ -46,15 +46,12 @@
   
   ::ng-deep .custom-dropdown.p-dropdown:focus-within {
     border-color: rgb(0, 195, 255);
-    box-shadow: 0 0 8px rgb(0, 195, 255, 0.5);
   }
-  
-  ::ng-deep .custom-dropdown .p-select-list-container {
-    text-align: left;
-    background-color: #000000; /* fondo semitransparente */
+
+  ::ng-deep .custom-dropdown .p-select-list {
+    background-color: #00aeff6e; /* fondo semitransparente */
     border-radius: 4px;
   }
-  
   .custom-button {
     opacity: 0;
     animation-name: fadeInUp;

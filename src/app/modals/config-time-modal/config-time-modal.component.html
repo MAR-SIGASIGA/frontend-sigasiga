@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Configurar Tiempo</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label>Minutos:</ion-label>
+    <ion-select [(ngModel)]="minutes">
+      <ion-select-option *ngFor="let minute of minutesOptions" [value]="minute">{{ minute }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Segundos:</ion-label>
+    <ion-select [(ngModel)]="seconds">
+      <ion-select-option *ngFor="let second of secondsOptions" [value]="second">{{ second }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Décimas:</ion-label>
+    <ion-select [(ngModel)]="decimas">
+      <ion-select-option *ngFor="let decima of decimasOptions" [value]="decima">{{ decima }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-button expand="full" (click)="saveTime()">Guardar</ion-button>
+</ion-content>

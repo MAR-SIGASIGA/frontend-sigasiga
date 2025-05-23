@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AppConfigService } from '../services/app-config.service';
 import { Router } from '@angular/router';
+import { EventLifecycleService } from '../services/event-lifecycle.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private configService: AppConfigService,
-    private router: Router
+    private router: Router,
+    private eventLifecycleService: EventLifecycleService
   ) {
     this.apiUrl = this.configService.apiRestUrl;
   }
@@ -26,6 +28,7 @@ export class AuthService {
   saveAuthData(token: string, eventId: string) {
     localStorage.setItem('token', token);
     localStorage.setItem('event_id', eventId);
+    this.eventLifecycleService.startListening();
   }
   
   // Obtener token
