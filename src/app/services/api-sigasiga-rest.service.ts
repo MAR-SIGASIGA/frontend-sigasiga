@@ -167,4 +167,24 @@ export class ApiSigasigaRestService {
     });
     return this.http.post(url, {}, { headers });
   }
+
+  stopEvent(): Observable<any> {
+    const url = `${this.baseUrl}/streaming/stop_event`;
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    return this.http.post(url, {}, { headers });
+  }
+
+  getRtmpInfo(): Observable<any> {
+    const url = `${this.baseUrl}/config/rtmp_info`;
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    return this.http.get(url, { headers });
+  }
 }

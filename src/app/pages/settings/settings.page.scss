@@ -47,6 +47,20 @@
     height: 100%;
     margin: 0 auto;
   }
+  ::ng-deep .p-toast {
+    width: 400px; /* ancho que quieras */
+    max-width: 90vw; /* para que no exceda ancho de pantalla */
+    font-size: 1.2rem; /* tamaño del texto */
+    /* Podés agregar más estilos como altura, padding, etc */
+  }
+
+  ::ng-deep .p-confirmpopup {
+    width: 400px; /* ancho que quieras */
+    max-width: 90vw; /* para que no exceda ancho de pantalla */
+    font-size: 1.2rem; /* tamaño del texto */
+    /* Podés agregar más estilos como altura, padding, etc */
+  }
+
 
   @media (max-width: 560px) {
     .main-container {

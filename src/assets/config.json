@@ -1,6 +1,6 @@
 {
-    "apiWsUrl": "wss://api-sigasiga-ws.dev.sigasiga.walry.cloud",
-    "apiSioUrl": "https://api-sigasiga-socketio.dev.sigasiga.walry.cloud",
-    "apiRestUrl": "https://api-sigasiga-rest.dev.sigasiga.walry.cloud",
+    "apiWsUrl": "wss://api-ws.dev.sigasiga.walry.cloud",
+    "apiSioUrl": "https://api-sio.dev.sigasiga.walry.cloud",
+    "apiRestUrl": "https://api.dev.sigasiga.walry.cloud",
     "production": true
   }
