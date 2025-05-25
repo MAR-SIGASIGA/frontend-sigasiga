@@ -4,17 +4,30 @@ import { CommonModule } from '@angular/common';
 import { ApiSigasigaRestService } from 'src/app/services/api-sigasiga-rest.service';
 //import modal config-time
 import { ConfigTimeModalComponent } from '../../modals/config-time-modal/config-time-modal.component';
+import { CalendarModule } from 'primeng/calendar';
+import { FormsModule } from '@angular/forms';
+import { DatePickerModule } from 'primeng/datepicker';
+import { ButtonModule } from 'primeng/button';
+import { SliderModule } from 'primeng/slider';
+import { DialogModule } from 'primeng/dialog';
+import { IftaLabelModule } from 'primeng/iftalabel';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+// importar socket io service
+import { SigasigaSocketioService } from '../../services/sigasiga-socketio.service';
+
 
 @Component({
   selector: 'app-scoreboard',
   templateUrl: './scoreboard.page.html',
   styleUrls: ['./scoreboard.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule]
+  imports: [IonicModule, CommonModule, CalendarModule, SliderModule, FormsModule, DatePickerModule, ButtonModule, DialogModule, IftaLabelModule, InputIconModule, InputTextModule, IconFieldModule]
 })
 export class ScoreboardPage {
-  localTeam = '';
-  visitorTeam = '';
+  localTeam = 'nombre local';
+  visitorTeam = 'nombre visitante';
   localScore = 0;
   visitanteScore = 0;
   localFouls = 0;
@@ -24,15 +37,55 @@ export class ScoreboardPage {
   timer = "";
   milisecondstimer = ""
   timer24 = 0;
+  value: Date = new Date();
+  hour: number = 0;
+  minute: number = 0;
+  visible = false;
+  localTeamInput = '';
+  visitorTeamInput = '';
+  visibleLocalModal = false;
+  visibleVisitorModal = false;
 
 
-  constructor(private apiSigasigaRestService: ApiSigasigaRestService, private modalController: ModalController) {
-    
+  constructor(private apiSigasigaRestService: ApiSigasigaRestService,
+    private modalController: ModalController,
+    private socketService: SigasigaSocketioService) {
+   
+  }
+
+  ngOnInit() {
+    const eventId = localStorage.getItem('event_id');
+    this.socketService.on(`${eventId}-scoreboard_room`, (data: any) => {
+      const data_dict = data.data;
+      console.log(data_dict);
+      this.localTeam = data_dict.local_team;
+      this.visitorTeam = data_dict.visitor_team;
+      this.localScore = data_dict.local_points;
+      this.visitanteScore = data_dict.visitor_points;
+      this.timerStatus = data_dict.timer_status;
+      this.timer = this.milisecondsToTime(data_dict.timer);
+      this.visible = data_dict.visible;
+    });
+  }
+
+  showDialogLocal() {
+    this.visibleLocalModal = !this.visibleLocalModal;
+  }
+
+  showDialogVisitor() {
+    this.visibleVisitorModal = !this.visibleVisitorModal;
+  }
+
+  milisecondsToTime(miliseconds: number) {
+    const minutes = Math.floor((miliseconds % 3600000) / 60000);
+    const seconds = Math.floor((miliseconds % 60000) / 1000);
+    const deciseconds = Math.floor((miliseconds % 1000) / 100);
+    const time = `${minutes}:${seconds}.${deciseconds}`;
+    return time;
   }
 
   toogleTimerStatus() {
     this.apiSigasigaRestService.toogleTimerStatus().subscribe((response) => {
-      console.log(response);
       this.timerStatus = response.timer_status;
     });
   }
@@ -80,5 +133,19 @@ export class ScoreboardPage {
     } else {
       this.visitanteFouls = Math.max(0, this.visitanteFouls + change);
     }
+  }
+
+  saveLocalTeam() {
+    this.apiSigasigaRestService.setTeam("local", this.localTeamInput).subscribe((response) => {
+      console.log(response);
+    });
+    this.localTeam = this.localTeamInput;
+  }
+
+  saveVisitorTeam() {
+    this.apiSigasigaRestService.setTeam("visitor", this.visitorTeamInput).subscribe((response) => {
+      console.log(response);
+    });
+    this.visitorTeam = this.visitorTeamInput;
   }
 }

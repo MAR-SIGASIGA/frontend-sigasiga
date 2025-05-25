@@ -11,7 +11,7 @@
         <ion-card-title class="ion-text-center">Tiempo del partido</ion-card-title>
       </ion-card-header>
       <ion-card-content class="ion-text-center">
-        <h1 class="timer">00:00.0</h1>
+        <h1 class="timer">{{ timer }}</h1>
         <ion-buttons class="ion-justify-content-center">
           <ion-button color="primary" fill="solid" shape="round" (click)="toogleTimerStatus()">
             <ion-icon *ngIf="timerStatus" name="pause" slot="icon-only" size="small"></ion-icon>
@@ -29,7 +29,35 @@
         <ion-col size="6" class="ion-no-padding ion-no-margin">
           <ion-card>
             <ion-card-header>
-              <ion-card-subtitle class="ion-text-center">LOCAL</ion-card-subtitle>
+              <ion-card-subtitle class="ion-text-center">
+                <ion-row>
+                  <ion-col size="6" class="ion-text-start" style="display: flex; align-items: center; justify-content: left;">
+                    <h2>{{ localTeam }}</h2>
+                  </ion-col>
+                  <ion-col size="6" class="ion-text-end" style="display: flex; align-items: center; justify-content: right;">
+
+                      <div class="card flex justify-center">
+                        <p-button icon="pi pi-cog" [rounded]="true" severity="info" [outlined]="true" size="small" (click)="showDialogLocal()"/> 
+                        <p-dialog header="Editar equipo local" [modal]="true" [(visible)]="visibleLocalModal" [style]="{ width: '25rem' }" appendTo="body">
+                          <p-iftalabel>
+                            <p-iconfield>
+                              <ion-row>
+                                <ion-col size="10">
+                                  <p-inputicon class="pi pi-user" />
+                                  <input pInputText id="localTeamInput" [(ngModel)]="localTeamInput" autocomplete="off" />
+                                </ion-col>
+                                <ion-col size="2" style="display: flex; align-items: center; justify-content: right;">
+                                  <p-button icon="pi pi-check" [rounded]="true" severity="info" [outlined]="true" size="small" (click)="saveLocalTeam()" (click)="visibleLocalModal = false"/>
+                                </ion-col>
+                              </ion-row>
+                            </p-iconfield>
+                            <label for="localTeamInput">Local Team</label>
+                        </p-iftalabel>
+                        </p-dialog>
+                      </div>
+                  </ion-col>
+                </ion-row>
+              </ion-card-subtitle>
               <ion-card-title class="score-text ion-text-center">{{ localScore }}</ion-card-title>
             </ion-card-header>
         
@@ -75,7 +103,35 @@
         <ion-col size="6" class="ion-no-padding ion-no-margin">
           <ion-card>
             <ion-card-header>
-              <ion-card-subtitle class="ion-text-center">VISITANTE</ion-card-subtitle>
+              <ion-card-subtitle class="ion-text-center">
+                <ion-row>
+                  <ion-col size="6" class="ion-text-start" style="display: flex; align-items: center; justify-content: left;">
+                    <h2>{{ visitorTeam }}</h2>
+                  </ion-col>
+                  <ion-col size="6" class="ion-text-end" style="display: flex; align-items: center; justify-content: right;">
+                    <div class="card flex justify-center">
+                      <p-button icon="pi pi-cog" [rounded]="true" severity="info" [outlined]="true" size="small" (click)="showDialogVisitor()"/>
+
+                      <p-dialog header="Editar equipo visitante" [modal]="true" [(visible)]="visibleVisitorModal" [style]="{ width: '25rem' }" appendTo="body">
+                        <p-iftalabel>
+                          <p-iconfield>
+                            <ion-row>
+                              <ion-col size="10">
+                                <p-inputicon class="pi pi-user" />
+                                <input pInputText id="visitorTeamInput" [(ngModel)]="visitorTeamInput" autocomplete="off" size="small" />
+                              </ion-col>
+                              <ion-col size="2" style="display: flex; align-items: center; justify-content: right;">
+                                <p-button icon="pi pi-check" [rounded]="true" severity="info" [outlined]="true" size="small" (click)="saveVisitorTeam()" (click)="visibleVisitorModal = false"/>
+                              </ion-col>
+                            </ion-row>
+                          </p-iconfield>
+                          <label for="visitorTeamInput">Editar equipo visitante</label>
+                      </p-iftalabel>
+                      </p-dialog>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-card-subtitle>
               <ion-card-title class="score-text ion-text-center">{{ visitanteScore }}</ion-card-title>
             </ion-card-header>
         

@@ -13,6 +13,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Router } from '@angular/router';
 import { SigasigaSocketioService } from '../../services/sigasiga-socketio.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 
 @Component({
@@ -20,7 +21,7 @@ import { SigasigaSocketioService } from '../../services/sigasiga-socketio.servic
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, ToastModule, ConfirmPopupModule, ButtonModule, ToggleSwitchModule],
+  imports: [IonicModule, CommonModule, FormsModule, ToastModule, ConfirmPopupModule, ButtonModule, ToggleSwitchModule, ConfirmDialogModule],
   providers: [ConfirmationService, MessageService]
 })
 export class SettingsPage implements OnInit {

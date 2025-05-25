@@ -9,13 +9,14 @@ import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-participants-modal',
   templateUrl: './participants-modal.component.html',
   styleUrls: ['./participants-modal.component.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, ToastModule]
+  imports: [IonicModule, CommonModule, FormsModule, ToastModule, ButtonModule]
 })
 export class ParticipantsModalComponent {
   @Input() participants: any;

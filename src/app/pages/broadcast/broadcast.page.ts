@@ -3,6 +3,7 @@ import { AppConfigService } from '../../services/app-config.service';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import { ApiSigasigaRestService } from '../../services/api-sigasiga-rest.service';
 
 @Component({
   selector: 'app-broadcast',
@@ -17,11 +18,14 @@ export class BroadcastPage {
   private ws!: WebSocket;
   private mediaRecorder!: MediaRecorder;
   public isStreaming = false;
+  public videoSourceName = '';
+  public clientId = '';
 
   public resolutionScale = 1.0;
   public qualityScale = 1.0;
 
-  constructor(private configService: AppConfigService) {}
+  constructor(private configService: AppConfigService, 
+    private apiSigasigaRestService: ApiSigasigaRestService) {}
 
   async ionViewDidEnter() {
     await this.startCamera();
@@ -55,9 +59,11 @@ export class BroadcastPage {
   }
 
   startStreaming() {
+    this.clientId = this.shortIdBase64();
+    this.videoSourceName = this.clientId;
     const eventId = localStorage.getItem('event_id');
     const token = localStorage.getItem('token');
-    const wsUrl = this.configService.apiWsUrl + `/ws/stream?eventId=${eventId}&token=${token}`
+    const wsUrl = this.configService.apiWsUrl + `/ws/stream?eventId=${eventId}&token=${token}&clientId=${this.clientId}`
     console.log(wsUrl)
 
     // const wsUrl = `wss://api-sigasiga-ws.dev.sigasiga.walry.cloud/ws/stream?eventId=${eventId}&sourceId=${sourceId}&token=${token}`;
@@ -104,4 +110,17 @@ export class BroadcastPage {
     // IMPORTANTE: qualityScale no se aplica a MediaRecorder directamente,
     // pero podés usarlo si hacés compresión manual más adelante (ej: canvas.toBlob)
   }
+
+  rotateVideoSource(orientation: number) {
+    this.apiSigasigaRestService.rotateVideoSource(this.videoSourceName, orientation).subscribe((response) => {
+      console.log(response);
+    });
+  }
+
+  shortIdBase64(length = 8) {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode(...array)).slice(0, length);
+  }
+  
 }

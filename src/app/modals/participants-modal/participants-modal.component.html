@@ -8,16 +8,28 @@
 </ion-header>
 
 <ion-content class="ion-padding modal-content" fullscreen>
+  <ion-row>
+    <ion-col size="12" class="ion-text-center">
+      <p-button icon="pi pi-user-plus" severity="info" [outlined]="true" size="large" [rounded]="true" [raised]="true" (click)="addParticipant()">
+      </p-button>
+    </ion-col>
+  </ion-row>
   <ion-list *ngIf="participants?.length; else noParticipants">
     <ng-container *ngFor="let p of participants">
       <!-- Fila con el participante -->
       <ion-item>
+        <ion-avatar slot="start">
+          <img [src]="'https://avatar.iran.liara.run/public'" alt="Avatar" />
+        </ion-avatar>
         <ion-label>
           <p>{{ p.user_id }}</p>
         </ion-label>
-        <ion-button fill="outline" slot="end" (click)="viewDetails(p)">
-          {{ expandedParticipantId === p.user_id ? 'Ocultar' : 'Ver detalles' }}
-        </ion-button>
+        <p-button *ngIf="expandedParticipantId !== p.user_id" icon="pi pi-eye" 
+        severity="info" [outlined]="true" size="small" [rounded]="true" [raised]="true" (click)="viewDetails(p)" class="ion-margin-start">
+        </p-button>
+        <p-button *ngIf="expandedParticipantId === p.user_id" icon="pi pi-eye-slash" 
+        severity="info" [outlined]="true" size="small" [rounded]="true" [raised]="true" (click)="viewDetails(p)">
+        </p-button>
       </ion-item>
 
       <!-- Detalles expandibles debajo -->
@@ -41,7 +53,5 @@
     <p>No hay participantes.</p>
   </ng-template>
 
-  <ion-button expand="full" class="ion-margin-top" (click)="addParticipant()">
-    Añadir participante
-  </ion-button>
+  
 </ion-content>

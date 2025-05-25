@@ -26,7 +26,7 @@
               <ion-label>Finalizar Evento</ion-label>
             </ion-col>
             <ion-col size="2">
-              <p-confirmpopup />
+              <p-confirmdialog />
               <p-button
               icon="pi pi-power-off" 
               severity="danger" 
@@ -65,16 +65,16 @@
               placeholder="Introduce tu RTMP key"
               class="custom-input"
             ></ion-input>
-        
-            <ion-button
-              fill="clear"
-              shape="round"
-              color="primary"
-              (click)="enviarRTMPKey()"
-              class="send-btn"
-            >
-              <ion-icon name="send-outline"></ion-icon>
-            </ion-button>
+            <p-button
+              icon="pi pi-send"
+              severity="info"
+              [outlined]="true"
+              size="large"
+              [rounded]="true"
+              [raised]="true"
+              (onClick)="enviarRTMPKey()"
+            />
+            
           </div>
         </ion-item>
         <!-- Fila 2: Transmitir en YouTube -->
@@ -85,7 +85,7 @@
         <ion-item >
           <ion-label *ngIf="!rtmpToogle" position="close">Comenzar transmisión</ion-label>
           <ion-label *ngIf="rtmpToogle" position="close">Detener transmisión</ion-label>
-          <p-toggleswitch slot="end" [(ngModel)]="rtmpToogle" (onChange)="toogleRtmp()" color="primary" [disabled]="!isRtmpToogleEnabled()"></p-toggleswitch>
+          <p-toggleswitch slot="end" [(ngModel)]="rtmpToogle" (onChange)="toogleRtmp()"  [disabled]="!isRtmpToogleEnabled()"></p-toggleswitch>
         </ion-item>
       </ion-card-content>
     </ion-card>
@@ -103,9 +103,18 @@
         <ion-item lines="none">
           <ion-icon name="person-add-outline" slot="start" color="medium"></ion-icon>
           <ion-label>Participantes</ion-label>
-          <ion-button fill="clear" shape="round" color="primary" slot="end" (click)="openParticipantsModal()">
-            <ion-icon name="open-outline"></ion-icon>
-          </ion-button>
+          <p-button
+            icon="pi pi-user-edit"
+            severity="info"
+            [outlined]="true"
+            size="large"
+            [rounded]="true"
+            [raised]="true"
+            slot="end"
+            (onClick)="openParticipantsModal()"
+
+          />
+          
         </ion-item>
       </ion-card-content>
     </ion-card>

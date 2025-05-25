@@ -187,4 +187,15 @@ export class ApiSigasigaRestService {
     });
     return this.http.get(url, { headers });
   }
+
+  rotateVideoSource(video_source_name: string, orientation: number): Observable<any> {
+    const url = `${this.baseUrl}/streaming/rotate_video_source`;
+    const body = { video_source_name: video_source_name, orientation: orientation };
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    return this.http.post(url, body, { headers });
+  }
 }
