@@ -82,16 +82,16 @@ export class ApiSigasigaRestService {
   }
 
   getParticipantList(): Observable<any> {
-    console.log("getParticipantList");
+    // console.log("getParticipantList");
     const url = `${this.baseUrl}/config/participant_list`;
     const token = localStorage.getItem('token');
-    console.log(token);
-    console.log("getParticipantList");
+    // console.log(token);
+    // console.log("getParticipantList");
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
-    console.log(headers);
+    // console.log(headers);
     return this.http.get(url, { headers });
   }
 

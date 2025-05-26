@@ -1,10 +1,4 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Transmisión de Cámara</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content fullscreen scroll-y="false" class="ion-padding">
+<ion-content class="ion-padding" scroll-y="auto">
   <div style="display: flex; flex-direction: column; height: 100%; align-items: center;">
 
     <!-- VIDEO (75%) -->
@@ -13,30 +7,36 @@
     </div>
 
     <!-- CONTROLES (25%) -->
-    <div style="flex: 1; display: flex; justify-content: space-around; align-items: center; max-width: fit-content;">
-      <ion-row>
-      <!-- Rotar izquierda -->
-       <ion-col size="4">
-      <ion-button shape="round" fill="outline" size="large" (click)="rotateVideoSource(-90)">
-        <ion-icon slot="icon-only" name="refresh-outline" style="transform: scaleX(-1);" ></ion-icon>
-      </ion-button>
-      </ion-col>
-
-      <ion-col size="4">
-      <!-- Play/Pause (más grande) -->
-      <ion-button shape="round" [color]="isStreaming ? 'danger' : 'primary'" size="large" style="transform: scale(1.4);" (click)="toggleStream()">
-        <ion-icon slot="icon-only" [name]="isStreaming ? 'stop' : 'play'"></ion-icon>
-      </ion-button>
-      </ion-col>
-
-      <ion-col size="4">
-      <!-- Rotar derecha -->
-      <ion-button shape="round" fill="outline" size="large" (click)="rotateVideoSource(90)">
-        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-      </ion-button>
-      </ion-col>
-    </ion-row>
+    <div style="width: 100%; max-width: 375px; display: flex; justify-content: center; align-items: center;">
+      <ion-row style="width: 100%;">
+        <!-- Rotar izquierda -->
+         <ion-col size="3" style="display: flex; justify-content: left; align-items: center;">
+        <ion-button shape="round" fill="outline" size="large" (click)="rotateVideoSource(-90)">
+          <ion-icon slot="icon-only" name="refresh-outline" style="transform: scaleX(-1);" ></ion-icon>
+        </ion-button>
+        </ion-col>
+  
+        <ion-col size="3" style="display: flex; justify-content: left; align-items: center;">
+        <!-- Play/Pause (más grande) -->
+        <ion-button shape="round" [color]="isStreaming ? 'danger' : 'primary'" size="large" style="transform: scale(1.4);" (click)="toggleStream()">
+          <ion-icon slot="icon-only" [name]="isStreaming ? 'stop' : 'play'"></ion-icon>
+        </ion-button>
+        </ion-col>
+  
+        <ion-col size="3" style="display: flex; justify-content: left; align-items: center;">
+        <!-- Rotar derecha -->
+        <ion-button shape="round" fill="outline" size="large" (click)="rotateVideoSource(90)">
+          <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+        </ion-button>
+        </ion-col>
+        <ion-col size="3" style="display: flex; justify-content: right; align-items: center;">
+        <ion-button shape="round" fill="outline" size="large" (click)="toggleFacingMode()" [disabled]="isStreaming">
+          <ion-icon slot="icon-only" name="camera-reverse-outline"></ion-icon>
+        </ion-button>
+        </ion-col>
+      </ion-row>
     </div>
+      
   </div>
 </ion-content>
  

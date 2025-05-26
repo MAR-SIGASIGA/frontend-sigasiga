@@ -41,11 +41,11 @@ export class StartPage implements OnInit {
     this.apiService.getSportsList().subscribe({
       next: (res) => {
         this.sports = res.sports;
-        console.log(this.sports);
+        // console.log(this.sports);
       },
       error: (err) => {
         this.errorMessage = 'Failed to load sports list.';
-        console.error(err);
+        // console.error(err);
       }
     });
   }
@@ -78,7 +78,7 @@ export class StartPage implements OnInit {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = 'Error al crear el evento. Consulte con el administrador.';
-        console.error(err);
+        // console.error(err);
       }
     });
   }

@@ -43,16 +43,16 @@ export class SettingsPage implements OnInit {
     this.apiSigasigaRestService.getRtmpInfo().subscribe((response) => {
       this.rtmpKey = response.rtmp_key;
       this.rtmpToogle = response.rtmp_status;
-      console.log(response);
+      // console.log(response);
     });
     this.socketService.on(`${eventId}-config_room-rtmp_status`, (data: any) => {
-      console.log(data);
+      // console.log(data);
       this.rtmpToogle = data.data.status;
       this.rtmpKey = data.data.rtmp_key;
-      console.log(this.rtmpToogle);
+      // console.log(this.rtmpToogle);
     });
     this.socketService.on(`${eventId}-config_room-stop_event`, (data: any) => {
-      console.log(data);
+      // console.log(data);
 
       this.messageService.add({ severity: 'warn', summary: 'Evento finalizado por el usuario', detail: '', life: 3000 });
       setTimeout(() => {
@@ -90,7 +90,7 @@ export class SettingsPage implements OnInit {
   
       await modal.present();
     } catch (error) {
-      console.error('Error al obtener participantes:', error);
+      // console.error('Error al obtener participantes:', error);
       // Mostrar alerta, toast, etc.
     } finally {
       await loading.dismiss();
@@ -98,7 +98,7 @@ export class SettingsPage implements OnInit {
   }
 
   enviarRTMPKey() {
-    console.log('RTMP Key:', this.rtmpKeyInput);
+    // console.log('RTMP Key:', this.rtmpKeyInput);
     this.rtmpKey = this.rtmpKeyInput;
     this.apiSigasigaRestService.setRtmpKey(this.rtmpKey).subscribe((response) => {
       this.messageService.add({ severity: 'success', summary: 'RTMP Key actualizada', detail: '', life: 3000 });
@@ -107,7 +107,7 @@ export class SettingsPage implements OnInit {
   }
   
   toogleRtmp() {
-    console.log('YouTube activado:', this.rtmpToogle);
+    // console.log('YouTube activado:', this.rtmpToogle);
     this.apiSigasigaRestService.toogleRtmpStatus().subscribe((response) => {
       if (response.status) {
         this.messageService.add({ severity: 'info', summary: 'RTMP activado', detail: '', life: 3000 });
@@ -142,7 +142,7 @@ export class SettingsPage implements OnInit {
                     this.router.navigate(['/start']);
               });
             } catch (error) {
-              console.error('Error al finalizar el evento:', error);
+              // console.error('Error al finalizar el evento:', error);
             }
             this.messageService.add({ severity: 'info', summary: 'Confirmado', detail: 'Evento finalizado', life: 3000 });
         },

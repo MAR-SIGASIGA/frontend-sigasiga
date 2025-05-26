@@ -20,7 +20,7 @@ export class BroadcastPage {
   public isStreaming = false;
   public videoSourceName = '';
   public clientId = '';
-
+  public defaultFacingMode = 'user';
   public resolutionScale = 1.0;
   public qualityScale = 1.0;
 
@@ -37,7 +37,8 @@ export class BroadcastPage {
         video: {
           width: { ideal: 1280 * this.resolutionScale },
           height: { ideal: 720 * this.resolutionScale },
-          frameRate: { ideal: 25 }
+          frameRate: { ideal: 25 },
+          facingMode: 'user'
         },
         audio: false
       });
@@ -64,7 +65,7 @@ export class BroadcastPage {
     const eventId = localStorage.getItem('event_id');
     const token = localStorage.getItem('token');
     const wsUrl = this.configService.apiWsUrl + `/ws/stream?eventId=${eventId}&token=${token}&clientId=${this.clientId}`
-    console.log(wsUrl)
+    // console.log(wsUrl)
 
     // const wsUrl = `wss://api-sigasiga-ws.dev.sigasiga.walry.cloud/ws/stream?eventId=${eventId}&sourceId=${sourceId}&token=${token}`;
 
@@ -101,19 +102,19 @@ export class BroadcastPage {
 
   updateResolution(scale: number) {
     this.resolutionScale = scale;
-    console.log(`📐 Resolución ajustada: ${scale * 100}%`);
+    // console.log(`📐 Resolución ajustada: ${scale * 100}%`);
   }
 
   updateQuality(scale: number) {
     this.qualityScale = scale;
-    console.log(`🎨 Calidad ajustada: ${scale * 100}%`);
+    // console.log(`🎨 Calidad ajustada: ${scale * 100}%`);
     // IMPORTANTE: qualityScale no se aplica a MediaRecorder directamente,
     // pero podés usarlo si hacés compresión manual más adelante (ej: canvas.toBlob)
   }
 
   rotateVideoSource(orientation: number) {
     this.apiSigasigaRestService.rotateVideoSource(this.videoSourceName, orientation).subscribe((response) => {
-      console.log(response);
+      // console.log(response);
     });
   }
 
@@ -121,6 +122,22 @@ export class BroadcastPage {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
     return btoa(String.fromCharCode(...array)).slice(0, length);
+  }
+
+  toggleFacingMode() {
+    this.defaultFacingMode = this.defaultFacingMode === 'user' ? 'environment' : 'user';
+    this.restartCamera();
+  }
+
+  restartCamera() {
+    if (this.isStreaming) {
+      this.stopStreaming();
+      this.startCamera();
+      this.startStreaming();
+    }
+    else {
+      this.startCamera();
+    }
   }
   
 }

@@ -57,7 +57,7 @@ export class ScoreboardPage {
     const eventId = localStorage.getItem('event_id');
     this.socketService.on(`${eventId}-scoreboard_room`, (data: any) => {
       const data_dict = data.data;
-      console.log(data_dict);
+      // console.log(data_dict);
       this.localTeam = data_dict.local_team;
       this.visitorTeam = data_dict.visitor_team;
       this.localScore = data_dict.local_points;
@@ -99,14 +99,14 @@ export class ScoreboardPage {
       if (dataReturned !== null) {
         this.timer = dataReturned.data.time;
         this.milisecondstimer = dataReturned.data.milliseconds;
-        console.log(`Tiempo en milisegundos: ${this.milisecondstimer}`);
+        // console.log(`Tiempo en milisegundos: ${this.milisecondstimer}`);
         this.apiSigasigaRestService.setTime(Number(this.milisecondstimer)).subscribe(
           (response: any) => {
-            console.log('Respuesta del servidor:', response);
+            // console.log('Respuesta del servidor:', response);
             // Una vez completada la lógica, actualiza la página
           },
           error => {
-            console.error('Error al enviar la clave:', error);
+            // console.error('Error al enviar la clave:', error);
           }
         );
       }
@@ -117,13 +117,13 @@ export class ScoreboardPage {
 
   setTime(time: number) {
     this.apiSigasigaRestService.setTime(time).subscribe((response) => {
-      console.log(response);
+      // console.log(response);
     });
   }
 
   modifyPoints(team: string, points: number) {
     this.apiSigasigaRestService.modifyPoints(team, points).subscribe((response) => {
-      console.log(response);
+      // console.log(response);
     });
   }
 
@@ -137,7 +137,7 @@ export class ScoreboardPage {
 
   saveLocalTeam() {
     this.apiSigasigaRestService.setTeam("local", this.localTeamInput).subscribe((response) => {
-      console.log(response);
+      // console.log(response);
     });
     this.localTeam = this.localTeamInput;
   }
