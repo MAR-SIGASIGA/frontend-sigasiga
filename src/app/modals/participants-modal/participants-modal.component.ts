@@ -54,7 +54,7 @@ export class ParticipantsModalComponent {
   
     try {
       const response = await firstValueFrom(this.apiSigasigaRestService.addNewParticipant());
-      console.log('response', response);
+      // console.log('response', response);
       const participant = {user_id: response?.user_id,
         join_url: response?.join_url,
       };
@@ -64,7 +64,7 @@ export class ParticipantsModalComponent {
     } catch (error) {
       console.error('Error al añadir participante:', error);
       if (error instanceof HttpErrorResponse) {
-        console.log('errorMessage', error.error.error);
+        // console.log('errorMessage', error.error.error);
         this.messageService.add({severity:'error', summary: 'Error', detail: error.error.error });
       }
       // Mostrar alerta, toast, etc.
@@ -80,9 +80,9 @@ export class ParticipantsModalComponent {
         summary: 'Copiado al portapapeles',
         life: 3000,
       });
-      console.log('Copiado al portapapeles');
+      // console.log('Copiado al portapapeles');
     }).catch(err => {
-      console.error('Error al copiar', err);
+      // console.error('Error al copiar', err);
     });
   }
 }
