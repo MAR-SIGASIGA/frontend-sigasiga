@@ -23,6 +23,9 @@ export class BroadcastPage {
   public defaultFacingMode = 'user';
   public resolutionScale = 1.0;
   public qualityScale = 1.0;
+  public user_mode_bps = 600000; // 600kbps
+  public environment_mode_bps = 400000; // 400kbps
+  public bps = this.user_mode_bps;
 
   constructor(private configService: AppConfigService, 
     private apiSigasigaRestService: ApiSigasigaRestService) {}
@@ -38,7 +41,7 @@ export class BroadcastPage {
           width: { ideal: 1280 * this.resolutionScale },
           height: { ideal: 720 * this.resolutionScale },
           frameRate: { ideal: 25 },
-          facingMode: 'user'
+          facingMode: this.defaultFacingMode
         },
         audio: false
       });
@@ -76,7 +79,7 @@ export class BroadcastPage {
       console.log('🟢 WebSocket abierto, iniciando grabación');
 
       const stream = this.videoElement.nativeElement.srcObject as MediaStream;
-      const options = { mimeType: 'video/webm; codecs=vp9' , videoBitsPerSecond: 600000}; // 1.25 Mbps
+      const options = { mimeType: 'video/webm; codecs=vp8' , videoBitsPerSecond: this.bps}; // 1.25 Mbps
 
       
       this.mediaRecorder = new MediaRecorder(stream, options);
@@ -87,7 +90,7 @@ export class BroadcastPage {
         }
       };
 
-      this.mediaRecorder.start(500); // Enviar un chunk cada 300ms
+      this.mediaRecorder.start(750); // Enviar un chunk cada 300ms
 
     };
   }
@@ -126,6 +129,7 @@ export class BroadcastPage {
 
   toggleFacingMode() {
     this.defaultFacingMode = this.defaultFacingMode === 'user' ? 'environment' : 'user';
+    this.bps = this.defaultFacingMode === 'user' ? this.user_mode_bps : this.environment_mode_bps;
     this.restartCamera();
   }
 
