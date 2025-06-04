@@ -31,10 +31,37 @@ export class BroadcastPage {
     private apiSigasigaRestService: ApiSigasigaRestService) {}
 
   async ionViewDidEnter() {
-    await this.startCamera();
+    // Only (re)start the camera if we are not currently streaming.
+    // If streaming, we assume the camera and MediaRecorder are active and should not be disturbed.
+    if (!this.isStreaming) {
+      await this.startCamera();
+    }
+  }
+
+  ionViewWillLeave() {
+    if (!this.isStreaming) {
+      this.releaseCameraResources();
+    }
+    // If streaming, video and audio capture continues in background (desired)
+  }
+
+  private releaseCameraResources() {
+    if (this.videoElement?.nativeElement.srcObject) {
+      const stream = this.videoElement.nativeElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      this.videoElement.nativeElement.srcObject = null;
+      console.log('📷 Camera resources released');
+    }
+    // Ensure mediaRecorder is stopped if it's active and tied to these resources
+    // This is a safeguard; typically, if !isStreaming, mediaRecorder should be inactive.
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+      console.log('MediaRecorder stopped due to camera resource release.');
+    }
   }
 
   async startCamera() {
+    this.releaseCameraResources(); // Ensure old resources are freed
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -47,7 +74,7 @@ export class BroadcastPage {
       });
 
       this.videoElement.nativeElement.srcObject = stream;
-      this.videoElement.nativeElement.play();
+      this.videoElement.nativeElement.play().catch(e => console.error("Error playing video:", e));
     } catch (err) {
       console.error('❌ Error accediendo a la cámara:', err);
     }
@@ -56,10 +83,14 @@ export class BroadcastPage {
   toggleStream() {
     if (this.isStreaming) {
       this.stopStreaming();
+      this.isStreaming = false;
     } else {
+      // Optimistically set isStreaming to true.
+      // startStreaming() will set it to false if it fails.
+      this.isStreaming = true;
       this.startStreaming();
     }
-    this.isStreaming = !this.isStreaming;
+    // Removed: this.isStreaming = !this.isStreaming; as state is now managed within branches.
   }
 
   startStreaming() {
@@ -68,10 +99,7 @@ export class BroadcastPage {
     const eventId = localStorage.getItem('event_id');
     const token = localStorage.getItem('token');
     const wsUrl = this.configService.apiWsUrl + `/ws/stream?eventId=${eventId}&token=${token}&clientId=${this.clientId}`
-    // console.log(wsUrl)
-
-    // const wsUrl = `wss://api-sigasiga-ws.dev.sigasiga.walry.cloud/ws/stream?eventId=${eventId}&sourceId=${sourceId}&token=${token}`;
-
+    
     this.ws = new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
 
@@ -79,33 +107,88 @@ export class BroadcastPage {
       console.log('🟢 WebSocket abierto, iniciando grabación');
 
       const stream = this.videoElement.nativeElement.srcObject as MediaStream;
-      const options = { mimeType: 'video/webm; codecs=vp8' , videoBitsPerSecond: this.bps}; // 1.25 Mbps
+      if (!stream || !stream.active) {
+          console.error("❌ Cannot start streaming: Camera stream is not available or not active.");
+          this.ws.close(); // This will trigger ws.onclose, which handles isStreaming state
+          return;
+      }
 
+      // Safeguard: stop any previous recorder instance
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+          this.mediaRecorder.stop();
+      }
       
-      this.mediaRecorder = new MediaRecorder(stream, options);
+      const options = { mimeType: 'video/webm; codecs=vp9' , videoBitsPerSecond: this.bps};
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && this.ws.readyState === WebSocket.OPEN) {
-          this.ws.send(event.data);
-        }
-      };
+      try {
+        this.mediaRecorder = new MediaRecorder(stream, options);
 
-      this.mediaRecorder.start(750); // Enviar un chunk cada 300ms
+        this.mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0 && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(event.data);
+          }
+        };
 
+        this.mediaRecorder.onerror = (event) => {
+            console.error("MediaRecorder error:", event);
+            if(this.isStreaming) {
+              // Perform a full stop, which includes closing WebSocket and stopping recorder.
+              this.stopStreaming(); 
+              this.isStreaming = false; // Ensure state is correct
+            }
+        };
+
+        this.mediaRecorder.start(750); // Enviar un chunk cada 750ms
+      } catch (e) {
+        console.error("Error creating MediaRecorder:", e);
+        this.ws.close(); // This will trigger ws.onclose
+        return;
+      }
+    };
+
+    this.ws.onerror = (event) => {
+      console.error("WebSocket error:", event);
+      if (this.isStreaming) {
+        this.stopStreamingInternals(); 
+        this.isStreaming = false;
+      }
+    };
+
+    this.ws.onclose = (event) => {
+      console.log("WebSocket closed.", event.code, event.reason);
+      if (this.isStreaming) { 
+        this.stopStreamingInternals();
+        this.isStreaming = false;
+        console.log("Streaming stopped due to WebSocket closure.");
+      }
     };
   }
 
-  stopStreaming() {
+  private stopStreamingInternals() {
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop();
+      console.log('MediaRecorder stopped internally.');
     }
-    this.ws?.close();
+  }
+
+  stopStreaming() {
+    // stopStreamingInternals will handle mediaRecorder
+    this.stopStreamingInternals(); 
+    
+    if (this.ws && this.ws.readyState !== WebSocket.CLOSED && this.ws.readyState !== WebSocket.CLOSING) {
+      this.ws.close();
+    }
     console.log('🔴 Transmisión detenida');
+    // this.isStreaming is managed by toggleStream or error handlers now.
   }
 
   updateResolution(scale: number) {
     this.resolutionScale = scale;
-    // console.log(`📐 Resolución ajustada: ${scale * 100}%`);
+    if (!this.isStreaming) {
+      this.startCamera();
+    } else {
+      console.log("Resolution changed. Will apply when camera restarts (e.g., after stopping/starting stream or changing facing mode).");
+    }
   }
 
   updateQuality(scale: number) {
@@ -128,20 +211,13 @@ export class BroadcastPage {
   }
 
   toggleFacingMode() {
+    if (this.isStreaming) {
+      console.warn("Cannot change camera while streaming. Please stop the stream first.");
+      // Optionally, show a toast to the user.
+      return;
+    }
     this.defaultFacingMode = this.defaultFacingMode === 'user' ? 'environment' : 'user';
     this.bps = this.defaultFacingMode === 'user' ? this.user_mode_bps : this.environment_mode_bps;
-    this.restartCamera();
+    this.startCamera(); // Restart camera to apply new facing mode
   }
-
-  restartCamera() {
-    if (this.isStreaming) {
-      this.stopStreaming();
-      this.startCamera();
-      this.startStreaming();
-    }
-    else {
-      this.startCamera();
-    }
-  }
-  
 }

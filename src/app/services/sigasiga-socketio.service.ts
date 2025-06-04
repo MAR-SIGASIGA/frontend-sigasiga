@@ -24,4 +24,8 @@ export class SigasigaSocketioService {
   disconnect(): void {
     this.socket.disconnect();
   }
+
+  off(event: string, callback: (...args: any[]) => void): void {
+    this.socket.off(event, callback);
+  }
 } 

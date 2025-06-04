@@ -46,6 +46,24 @@ export class ScoreboardPage {
   visibleLocalModal = false;
   visibleVisitorModal = false;
 
+  private eventId: string | null = null;
+  private socketEventName: string | null = null;
+  private scoreboardUpdateHandler = (data: any) => {
+    if (data && data.data) {
+      const data_dict = data.data;
+      // console.log('Scoreboard update received:', data_dict);
+      this.localTeam = data_dict.local_team;
+      this.visitorTeam = data_dict.visitor_team;
+      this.localScore = data_dict.local_points;
+      this.visitanteScore = data_dict.visitor_points;
+      this.timerStatus = data_dict.timer_status;
+      this.timer = this.milisecondsToTime(data_dict.timer);
+      this.visible = data_dict.visible;
+    } else {
+      // console.warn('Received scoreboard data in unexpected format:', data);
+    }
+  };
+
 
   constructor(private apiSigasigaRestService: ApiSigasigaRestService,
     private modalController: ModalController,
@@ -54,18 +72,37 @@ export class ScoreboardPage {
   }
 
   ngOnInit() {
-    const eventId = localStorage.getItem('event_id');
-    this.socketService.on(`${eventId}-scoreboard_room`, (data: any) => {
-      const data_dict = data.data;
-      // console.log(data_dict);
-      this.localTeam = data_dict.local_team;
-      this.visitorTeam = data_dict.visitor_team;
-      this.localScore = data_dict.local_points;
-      this.visitanteScore = data_dict.visitor_points;
-      this.timerStatus = data_dict.timer_status;
-      this.timer = this.milisecondsToTime(data_dict.timer);
-      this.visible = data_dict.visible;
-    });
+    this.eventId = localStorage.getItem('event_id');
+    if (this.eventId) {
+      this.socketEventName = `${this.eventId}-scoreboard_room`;
+    } else {
+      console.error('ScoreboardPage: event_id not found in localStorage. Socket updates will not be available.');
+    }
+    // Subscription will be handled by ionViewDidEnter
+  }
+
+  ionViewDidEnter() {
+    if (this.socketEventName && this.scoreboardUpdateHandler) {
+      this.socketService.on(this.socketEventName, this.scoreboardUpdateHandler);
+      // console.log(`Scoreboard: Subscribed to ${this.socketEventName}`);
+    }
+  }
+
+  ionViewWillLeave() {
+    if (this.socketEventName && this.scoreboardUpdateHandler) {
+      // This requires SigasigaSocketioService to have a public 'off' method.
+      this.socketService.off(this.socketEventName, this.scoreboardUpdateHandler);
+      // console.log(`Scoreboard: Unsubscribed from ${this.socketEventName}`);
+    }
+  }
+
+  ngOnDestroy() {
+    // Ensure cleanup if the component is completely destroyed.
+    if (this.socketEventName && this.scoreboardUpdateHandler) {
+      // This requires SigasigaSocketioService to have a public 'off' method.
+      this.socketService.off(this.socketEventName, this.scoreboardUpdateHandler);
+      // console.log(`Scoreboard: Unsubscribed from ${this.socketEventName} during ngOnDestroy`);
+    }
   }
 
   showDialogLocal() {

@@ -134,17 +134,22 @@ export class SettingsPage implements OnInit {
             severity: 'danger'
         },
         accept: () => {
-            try {
-              this.apiSigasigaRestService.stopEvent().subscribe((response) => {
-                  
+            this.messageService.add({ severity: 'info', summary: 'Procesando...', detail: 'Finalizando evento y reiniciando la aplicación.', life: 3000 });
+            this.apiSigasigaRestService.stopEvent().subscribe({
+                next: async (response) => {
+                    this.socketService.disconnect();
                     localStorage.removeItem('token');
                     localStorage.removeItem('event_id');
-                    this.router.navigate(['/start']);
-              });
-            } catch (error) {
-              // console.error('Error al finalizar el evento:', error);
-            }
-            this.messageService.add({ severity: 'info', summary: 'Confirmado', detail: 'Evento finalizado', life: 3000 });
+                    // Considera localStorage.clear(); si quieres borrar absolutamente todo
+                    // Forzar recarga completa redirigiendo a /start
+                    // Si no estuviera el interceptor, habria que hacer un window.location.href = '/start';
+                    window.location.reload();
+                },
+                error: (error) => {
+                    // console.error('Error al finalizar el evento:', error);
+                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo finalizar el evento. Inténtalo de nuevo.', life: 3000 });
+                }
+            });
         },
         reject: () => {
             this.messageService.add({ severity: 'warn', summary: 'Cancelado', detail: 'Acción cancelada', life: 3000 });

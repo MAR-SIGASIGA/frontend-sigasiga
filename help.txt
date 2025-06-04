@@ -1,0 +1,3 @@
+docker build --no-cache -t frontend-sigasiga-prod .
+docker tag frontend-sigasiga-prod localhost:32000/frontend-sigasiga-prod:latest
+docker push localhost:32000/frontend-sigasiga-prod:latest

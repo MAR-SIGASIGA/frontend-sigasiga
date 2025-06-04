@@ -5,6 +5,7 @@ import { AppConfigService } from '../../services/app-config.service';
 import { SigasigaSocketioService } from '../../services/sigasiga-socketio.service';
 import { ApiSigasigaRestService } from '../../services/api-sigasiga-rest.service';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 
 interface ClientImage {
@@ -29,6 +30,10 @@ export class ManagementPage implements OnInit, OnDestroy, AfterViewInit {
   @ViewChildren('clientCanvas') clientCanvases!: QueryList<ElementRef<HTMLCanvasElement>>;
   private clientCanvasMap = new Map<string, HTMLCanvasElement>();
 
+  private clientCanvasesSubscription: Subscription | undefined;
+  private socketEventHandler: ((data: any) => void) | undefined;
+  private eventId: string | null = null;
+
   constructor(
     private configService: AppConfigService,
     private socketService: SigasigaSocketioService,
@@ -36,19 +41,52 @@ export class ManagementPage implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const eventId = localStorage.getItem('event_id');
-    this.socketService.on(`${eventId}-director_room`, (data: any) => {
-      this.handleSocketData(data);
-    });
+    this.eventId = localStorage.getItem('event_id');
+    if (this.eventId) {
+      this.socketEventHandler = (data: any) => {
+        this.handleSocketData(data);
+      };
+      // La suscripción se moverá a ionViewDidEnter
+      // this.socketService.on(`${this.eventId}-director_room`, this.socketEventHandler);
+    } else {
+      console.error('ManagementPage: event_id not found in localStorage. Socket updates will not be available.');
+    }
+  }
+
+  ionViewDidEnter() {
+    if (this.eventId && this.socketEventHandler) {
+      this.socketService.on(`${this.eventId}-director_room`, this.socketEventHandler);
+      console.log(`ManagementPage: Subscribed to ${this.eventId}-director_room`);
+    }
+  }
+
+  ionViewWillLeave() {
+    if (this.eventId && this.socketEventHandler) {
+      this.socketService.off(`${this.eventId}-director_room`, this.socketEventHandler);
+      console.log(`ManagementPage: Unsubscribed from ${this.eventId}-director_room`);
+    }
   }
 
   ngAfterViewInit() {
-    this.clientCanvases.changes.subscribe(() => this.updateClientCanvasMap());
+    this.clientCanvasesSubscription = this.clientCanvases.changes.subscribe(() => this.updateClientCanvasMap());
     this.updateClientCanvasMap();
   }
 
   ngOnDestroy() {
     this.clientImages.clear();
+    this.clientCanvasMap.clear();
+
+    // Desuscribirse del socket como medida de seguridad final
+    if (this.socketEventHandler && this.eventId) {
+      this.socketService.off(`${this.eventId}-director_room`, this.socketEventHandler);
+      console.log(`ManagementPage: Ensured unsubscription from ${this.eventId}-director_room during ngOnDestroy`);
+    }
+
+    if (this.clientCanvasesSubscription) {
+      this.clientCanvasesSubscription.unsubscribe();
+    }
+    
+    console.log('ManagementPage destruido y recursos limpiados.');
   }
 
   private updateClientCanvasMap() {
@@ -162,6 +200,7 @@ export class ManagementPage implements OnInit, OnDestroy, AfterViewInit {
           return response.json();
         })
       client.active = isActive;  // Esto ya está vinculado automáticamente por [(ngModel)]
+      console.log(`ManagementPage: Client ${clientId} updated to ${isActive}`);
       
       // Otras acciones que quieras hacer cuando cambie el estado del toggle
     }

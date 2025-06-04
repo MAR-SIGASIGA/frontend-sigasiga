@@ -1,9 +1,10 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideIonicAngular } from '@ionic/angular/standalone';
 import { routes } from './app/app.routes';
+import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 
 import { AppConfigService } from './app/services/app-config.service';
 import { APP_INITIALIZER } from '@angular/core';
@@ -30,7 +31,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     MessageService,
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideIonicAngular(),
     provideAnimationsAsync(),
     providePrimeNG({

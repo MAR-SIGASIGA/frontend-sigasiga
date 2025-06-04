@@ -42,8 +42,8 @@ export class EventLifecycleService {
         localStorage.removeItem('token');
         localStorage.removeItem('event_id');
         this.isListening = false;
-        this.router.navigate(['/start']);
       }, 3000);
+      window.location.href = '/start';
     });
   }
 
