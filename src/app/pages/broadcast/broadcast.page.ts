@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ApiSigasigaRestService } from '../../services/api-sigasiga-rest.service';
-import { Muxer, ArrayBufferTarget } from 'webm-muxer';
+import { Muxer, StreamTarget } from 'webm-muxer';
 
 @Component({
   selector: 'app-broadcast',
@@ -21,18 +21,16 @@ export class BroadcastPage implements OnDestroy {
   
   // WebCodecs
   private encoder: VideoEncoder | null = null;
-  private muxer: Muxer<ArrayBufferTarget> | null = null;
+  private muxer: Muxer<StreamTarget> | null = null;
   private frameReader: ReadableStreamDefaultReader<VideoFrame> | null = null;
   private currentStream: MediaStream | null = null;
   
   // Control de streaming
   private isEncodingActive = false;
   private frameCount = 0;
-  private lastMuxFlushTime = 0;
   
   // Configuración
   private readonly KEYFRAME_INTERVAL = 10; // Keyframe cada 10 frames
-  private readonly MUX_FLUSH_INTERVAL_MS = 300; // Enviar WebM cada 300ms
   
   // Estado público para el template
   public isStreaming = false;
@@ -145,7 +143,7 @@ export class BroadcastPage implements OnDestroy {
       // 1. Inicializar WebSocket
       await this.initializeWebSocket();
       
-      // 2. Inicializar Muxer
+      // 2. Inicializar Muxer (con streaming)
       this.initializeMuxer();
       
       // 3. Inicializar Encoder
@@ -155,7 +153,7 @@ export class BroadcastPage implements OnDestroy {
       this.startEncodingLoop();
       
       this.isStreaming = true;
-      console.log('🟢 Streaming iniciado con WebCodecs');
+      console.log('🟢 Streaming iniciado con WebCodecs (modo streaming)');
       
     } catch (error) {
       console.error('❌ Error iniciando streaming:', error);
@@ -190,6 +188,13 @@ export class BroadcastPage implements OnDestroy {
     this.frameReader = null;
 
     // Finalizar muxer
+    if (this.muxer) {
+      try {
+        this.muxer.finalize();
+      } catch (e) {
+        // Ignorar errores de finalización
+      }
+    }
     this.muxer = null;
 
     // Cerrar WebSocket
@@ -200,7 +205,6 @@ export class BroadcastPage implements OnDestroy {
 
     // Reset contadores
     this.frameCount = 0;
-    this.lastMuxFlushTime = 0;
   }
 
   // ============ WEBSOCKET ============
@@ -245,11 +249,20 @@ export class BroadcastPage implements OnDestroy {
     });
   }
 
-  // ============ WEBM MUXER ============
+  // ============ WEBM MUXER (STREAMING MODE) ============
 
   private initializeMuxer() {
+    // Usar StreamTarget para enviar datos en tiempo real
+    // El callback onData se llama cada vez que hay datos listos
     this.muxer = new Muxer({
-      target: new ArrayBufferTarget(),
+      target: new StreamTarget({
+        onData: (data: Uint8Array, position: number) => {
+          // Enviar cada chunk inmediatamente al WebSocket
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(data);
+          }
+        }
+      }),
       video: {
         codec: 'V_VP8',
         width: this.videoWidth,
@@ -257,34 +270,11 @@ export class BroadcastPage implements OnDestroy {
         frameRate: this.videoFrameRate,
       },
       type: 'webm',
+      streaming: true, // ← IMPORTANTE: Modo streaming continuo
       firstTimestampBehavior: 'offset',
     });
     
-    this.lastMuxFlushTime = performance.now();
-    console.log(`📦 Muxer inicializado: ${this.videoWidth}x${this.videoHeight}`);
-  }
-
-  private flushMuxerToWebSocket() {
-    if (!this.muxer || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    try {
-      // Finalizar el muxer actual para obtener WebM completo
-      this.muxer.finalize();
-      const buffer = this.muxer.target.buffer;
-      
-      if (buffer.byteLength > 0) {
-        this.ws.send(buffer);
-        // console.log(`📤 Enviado: ${(buffer.byteLength / 1024).toFixed(1)} KB`);
-      }
-
-      // Reiniciar muxer para siguiente segmento
-      this.initializeMuxer();
-      
-    } catch (error) {
-      console.error('❌ Error enviando muxer buffer:', error);
-    }
+    console.log(`📦 Muxer inicializado (streaming): ${this.videoWidth}x${this.videoHeight}`);
   }
 
   // ============ VIDEO ENCODER ============
@@ -323,14 +313,8 @@ export class BroadcastPage implements OnDestroy {
     if (!this.muxer) return;
 
     try {
-      // Añadir chunk al muxer
+      // Añadir chunk al muxer - StreamTarget enviará automáticamente via onData
       this.muxer.addVideoChunk(chunk, metadata);
-
-      // Enviar periódicamente
-      const now = performance.now();
-      if (now - this.lastMuxFlushTime >= this.MUX_FLUSH_INTERVAL_MS) {
-        this.flushMuxerToWebSocket();
-      }
     } catch (error) {
       console.error('❌ Error añadiendo chunk al muxer:', error);
     }
