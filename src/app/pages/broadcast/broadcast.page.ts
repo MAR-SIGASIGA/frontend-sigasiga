@@ -1,9 +1,10 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { AppConfigService } from '../../services/app-config.service';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ApiSigasigaRestService } from '../../services/api-sigasiga-rest.service';
+import { Muxer, ArrayBufferTarget } from 'webm-muxer';
 
 @Component({
   selector: 'app-broadcast',
@@ -12,27 +13,49 @@ import { ApiSigasigaRestService } from '../../services/api-sigasiga-rest.service
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class BroadcastPage {
+export class BroadcastPage implements OnDestroy {
   @ViewChild('video', { static: true }) videoElement!: ElementRef<HTMLVideoElement>;
 
-  private ws!: WebSocket;
-  private mediaRecorder!: MediaRecorder;
+  // WebSocket
+  private ws: WebSocket | null = null;
+  
+  // WebCodecs
+  private encoder: VideoEncoder | null = null;
+  private muxer: Muxer<ArrayBufferTarget> | null = null;
+  private frameReader: ReadableStreamDefaultReader<VideoFrame> | null = null;
+  private currentStream: MediaStream | null = null;
+  
+  // Control de streaming
+  private isEncodingActive = false;
+  private frameCount = 0;
+  private lastMuxFlushTime = 0;
+  
+  // Configuración
+  private readonly KEYFRAME_INTERVAL = 10; // Keyframe cada 10 frames
+  private readonly MUX_FLUSH_INTERVAL_MS = 300; // Enviar WebM cada 300ms
+  
+  // Estado público para el template
   public isStreaming = false;
   public videoSourceName = '';
   public clientId = '';
-  public defaultFacingMode = 'user';
+  public defaultFacingMode: 'user' | 'environment' = 'user';
   public resolutionScale = 1.0;
   public qualityScale = 1.0;
-  public user_mode_bps = 600000; // 600kbps
-  public environment_mode_bps = 400000; // 400kbps
+  public user_mode_bps = 600000;
+  public environment_mode_bps = 400000;
   public bps = this.user_mode_bps;
 
-  constructor(private configService: AppConfigService, 
-    private apiSigasigaRestService: ApiSigasigaRestService) {}
+  // Dimensiones del video
+  private videoWidth = 1280;
+  private videoHeight = 720;
+  private videoFrameRate = 25;
+
+  constructor(
+    private configService: AppConfigService,
+    private apiSigasigaRestService: ApiSigasigaRestService
+  ) {}
 
   async ionViewDidEnter() {
-    // Only (re)start the camera if we are not currently streaming.
-    // If streaming, we assume the camera and MediaRecorder are active and should not be disturbed.
     if (!this.isStreaming) {
       await this.startCamera();
     }
@@ -42,182 +65,364 @@ export class BroadcastPage {
     if (!this.isStreaming) {
       this.releaseCameraResources();
     }
-    // If streaming, video and audio capture continues in background (desired)
   }
 
+  ngOnDestroy() {
+    this.cleanup();
+  }
+
+  // ============ GESTIÓN DE CÁMARA ============
+
   private releaseCameraResources() {
-    if (this.videoElement?.nativeElement.srcObject) {
-      const stream = this.videoElement.nativeElement.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+    if (this.currentStream) {
+      this.currentStream.getTracks().forEach(track => track.stop());
+      this.currentStream = null;
+    }
+    if (this.videoElement?.nativeElement) {
       this.videoElement.nativeElement.srcObject = null;
-      console.log('📷 Camera resources released');
     }
-    // Ensure mediaRecorder is stopped if it's active and tied to these resources
-    // This is a safeguard; typically, if !isStreaming, mediaRecorder should be inactive.
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-      console.log('MediaRecorder stopped due to camera resource release.');
-    }
+    console.log('📷 Camera resources released');
   }
 
   async startCamera() {
-    this.releaseCameraResources(); // Ensure old resources are freed
+    this.releaseCameraResources();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      this.videoWidth = Math.round(1280 * this.resolutionScale);
+      this.videoHeight = Math.round(720 * this.resolutionScale);
+
+      this.currentStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1280 * this.resolutionScale },
-          height: { ideal: 720 * this.resolutionScale },
-          frameRate: { ideal: 25 },
+          width: { ideal: this.videoWidth },
+          height: { ideal: this.videoHeight },
+          frameRate: { ideal: this.videoFrameRate },
           facingMode: this.defaultFacingMode
         },
         audio: false
       });
 
-      this.videoElement.nativeElement.srcObject = stream;
-      this.videoElement.nativeElement.play().catch(e => console.error("Error playing video:", e));
+      // Obtener dimensiones reales del track
+      const videoTrack = this.currentStream.getVideoTracks()[0];
+      const settings = videoTrack.getSettings();
+      this.videoWidth = settings.width || this.videoWidth;
+      this.videoHeight = settings.height || this.videoHeight;
+      
+      console.log(`📷 Camera started: ${this.videoWidth}x${this.videoHeight}`);
+
+      this.videoElement.nativeElement.srcObject = this.currentStream;
+      await this.videoElement.nativeElement.play();
     } catch (err) {
       console.error('❌ Error accediendo a la cámara:', err);
     }
   }
 
-  toggleStream() {
+  // ============ CONTROL DE STREAMING ============
+
+  async toggleStream() {
     if (this.isStreaming) {
       this.stopStreaming();
-      this.isStreaming = false;
     } else {
-      // Optimistically set isStreaming to true.
-      // startStreaming() will set it to false if it fails.
-      this.isStreaming = true;
-      this.startStreaming();
+      await this.startStreaming();
     }
-    // Removed: this.isStreaming = !this.isStreaming; as state is now managed within branches.
   }
 
-  startStreaming() {
-    this.clientId = this.shortIdBase64();
-    this.videoSourceName = this.clientId;
-    const eventId = localStorage.getItem('event_id');
-    const token = localStorage.getItem('token');
-    const wsUrl = this.configService.apiWsUrl + `/ws/stream?eventId=${eventId}&token=${token}&clientId=${this.clientId}`
-    
-    this.ws = new WebSocket(wsUrl);
-    this.ws.binaryType = 'arraybuffer';
+  async startStreaming() {
+    if (!this.currentStream || !this.currentStream.active) {
+      console.error('❌ No hay stream de cámara activo');
+      return;
+    }
 
-    this.ws.onopen = () => {
-      console.log('🟢 WebSocket abierto, iniciando grabación');
+    // Verificar soporte de WebCodecs
+    if (!('VideoEncoder' in window)) {
+      console.error('❌ WebCodecs no soportado en este navegador');
+      alert('Tu navegador no soporta WebCodecs. Usa Chrome/Edge actualizado.');
+      return;
+    }
 
-      const stream = this.videoElement.nativeElement.srcObject as MediaStream;
-      if (!stream || !stream.active) {
-          console.error("❌ Cannot start streaming: Camera stream is not available or not active.");
-          this.ws.close(); // This will trigger ws.onclose, which handles isStreaming state
-          return;
-      }
-
-      // Safeguard: stop any previous recorder instance
-      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-          this.mediaRecorder.stop();
-      }
+    try {
+      this.clientId = this.shortIdBase64();
+      this.videoSourceName = this.clientId;
       
-      const options = { mimeType: 'video/webm; codecs=vp9' , videoBitsPerSecond: this.bps};
-
-      try {
-        this.mediaRecorder = new MediaRecorder(stream, options);
-
-        this.mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0 && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(event.data);
-          }
-        };
-
-        this.mediaRecorder.onerror = (event) => {
-            console.error("MediaRecorder error:", event);
-            if(this.isStreaming) {
-              // Perform a full stop, which includes closing WebSocket and stopping recorder.
-              this.stopStreaming(); 
-              this.isStreaming = false; // Ensure state is correct
-            }
-        };
-
-        this.mediaRecorder.start(750); // Enviar un chunk cada 750ms
-      } catch (e) {
-        console.error("Error creating MediaRecorder:", e);
-        this.ws.close(); // This will trigger ws.onclose
-        return;
-      }
-    };
-
-    this.ws.onerror = (event) => {
-      console.error("WebSocket error:", event);
-      if (this.isStreaming) {
-        this.stopStreamingInternals(); 
-        this.isStreaming = false;
-      }
-    };
-
-    this.ws.onclose = (event) => {
-      console.log("WebSocket closed.", event.code, event.reason);
-      if (this.isStreaming) { 
-        this.stopStreamingInternals();
-        this.isStreaming = false;
-        console.log("Streaming stopped due to WebSocket closure.");
-      }
-    };
-  }
-
-  private stopStreamingInternals() {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-      console.log('MediaRecorder stopped internally.');
+      // 1. Inicializar WebSocket
+      await this.initializeWebSocket();
+      
+      // 2. Inicializar Muxer
+      this.initializeMuxer();
+      
+      // 3. Inicializar Encoder
+      await this.initializeEncoder();
+      
+      // 4. Iniciar loop de captura
+      this.startEncodingLoop();
+      
+      this.isStreaming = true;
+      console.log('🟢 Streaming iniciado con WebCodecs');
+      
+    } catch (error) {
+      console.error('❌ Error iniciando streaming:', error);
+      this.cleanup();
     }
   }
 
   stopStreaming() {
-    // stopStreamingInternals will handle mediaRecorder
-    this.stopStreamingInternals(); 
-    
-    if (this.ws && this.ws.readyState !== WebSocket.CLOSED && this.ws.readyState !== WebSocket.CLOSING) {
-      this.ws.close();
-    }
-    console.log('🔴 Transmisión detenida');
-    // this.isStreaming is managed by toggleStream or error handlers now.
+    console.log('🔴 Deteniendo streaming...');
+    this.cleanup();
+    this.isStreaming = false;
   }
+
+  private cleanup() {
+    // Detener loop de encoding
+    this.isEncodingActive = false;
+
+    // Cerrar encoder
+    if (this.encoder && this.encoder.state !== 'closed') {
+      try {
+        this.encoder.close();
+      } catch (e) {
+        console.warn('Error closing encoder:', e);
+      }
+    }
+    this.encoder = null;
+
+    // Cerrar frame reader
+    if (this.frameReader) {
+      this.frameReader.cancel().catch(() => {});
+    }
+    this.frameReader = null;
+
+    // Finalizar muxer
+    this.muxer = null;
+
+    // Cerrar WebSocket
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.close(1000, 'Streaming stopped');
+    }
+    this.ws = null;
+
+    // Reset contadores
+    this.frameCount = 0;
+    this.lastMuxFlushTime = 0;
+  }
+
+  // ============ WEBSOCKET ============
+
+  private initializeWebSocket(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const eventId = localStorage.getItem('event_id');
+      const token = localStorage.getItem('token');
+
+      if (!eventId || !token) {
+        reject(new Error('Faltan credenciales (event_id o token)'));
+        return;
+      }
+
+      const wsUrl = `${this.configService.apiWsUrl}/ws/stream?eventId=${eventId}&token=${token}&clientId=${this.clientId}`;
+      
+      this.ws = new WebSocket(wsUrl);
+      this.ws.binaryType = 'arraybuffer';
+
+      const timeout = setTimeout(() => {
+        reject(new Error('WebSocket connection timeout'));
+      }, 10000);
+
+      this.ws.onopen = () => {
+        clearTimeout(timeout);
+        console.log('🟢 WebSocket conectado');
+        resolve();
+      };
+
+      this.ws.onerror = (error) => {
+        clearTimeout(timeout);
+        console.error('❌ WebSocket error:', error);
+        reject(error);
+      };
+
+      this.ws.onclose = (event) => {
+        console.log('🔴 WebSocket cerrado:', event.code, event.reason);
+        if (this.isStreaming) {
+          this.stopStreaming();
+        }
+      };
+    });
+  }
+
+  // ============ WEBM MUXER ============
+
+  private initializeMuxer() {
+    this.muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: {
+        codec: 'V_VP8',
+        width: this.videoWidth,
+        height: this.videoHeight,
+        frameRate: this.videoFrameRate,
+      },
+      type: 'webm',
+      firstTimestampBehavior: 'offset',
+    });
+    
+    this.lastMuxFlushTime = performance.now();
+    console.log(`📦 Muxer inicializado: ${this.videoWidth}x${this.videoHeight}`);
+  }
+
+  private flushMuxerToWebSocket() {
+    if (!this.muxer || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    try {
+      // Finalizar el muxer actual para obtener WebM completo
+      this.muxer.finalize();
+      const buffer = this.muxer.target.buffer;
+      
+      if (buffer.byteLength > 0) {
+        this.ws.send(buffer);
+        // console.log(`📤 Enviado: ${(buffer.byteLength / 1024).toFixed(1)} KB`);
+      }
+
+      // Reiniciar muxer para siguiente segmento
+      this.initializeMuxer();
+      
+    } catch (error) {
+      console.error('❌ Error enviando muxer buffer:', error);
+    }
+  }
+
+  // ============ VIDEO ENCODER ============
+
+  private async initializeEncoder() {
+    // Configuración del encoder
+    const config: VideoEncoderConfig = {
+      codec: 'vp8',
+      width: this.videoWidth,
+      height: this.videoHeight,
+      bitrate: this.bps,
+      framerate: this.videoFrameRate,
+    };
+
+    // Verificar soporte del codec
+    const support = await VideoEncoder.isConfigSupported(config);
+    if (!support.supported) {
+      throw new Error(`Codec VP8 no soportado con esta configuración`);
+    }
+
+    this.encoder = new VideoEncoder({
+      output: (chunk, metadata) => {
+        this.handleEncodedChunk(chunk, metadata);
+      },
+      error: (error) => {
+        console.error('❌ VideoEncoder error:', error);
+        this.stopStreaming();
+      }
+    });
+
+    this.encoder.configure(config);
+    console.log(`🎬 VideoEncoder configurado: VP8 @ ${this.bps / 1000}kbps`);
+  }
+
+  private handleEncodedChunk(chunk: EncodedVideoChunk, metadata?: EncodedVideoChunkMetadata) {
+    if (!this.muxer) return;
+
+    try {
+      // Añadir chunk al muxer
+      this.muxer.addVideoChunk(chunk, metadata);
+
+      // Enviar periódicamente
+      const now = performance.now();
+      if (now - this.lastMuxFlushTime >= this.MUX_FLUSH_INTERVAL_MS) {
+        this.flushMuxerToWebSocket();
+      }
+    } catch (error) {
+      console.error('❌ Error añadiendo chunk al muxer:', error);
+    }
+  }
+
+  // ============ LOOP DE CAPTURA ============
+
+  private async startEncodingLoop() {
+    if (!this.currentStream) return;
+
+    const videoTrack = this.currentStream.getVideoTracks()[0];
+    
+    // Crear processor para obtener frames individuales
+    // @ts-ignore - MediaStreamTrackProcessor es experimental
+    const processor = new MediaStreamTrackProcessor({ track: videoTrack });
+    this.frameReader = processor.readable.getReader();
+    
+    this.isEncodingActive = true;
+    this.frameCount = 0;
+
+    console.log('🎥 Loop de encoding iniciado');
+
+    try {
+      while (this.isEncodingActive && this.frameReader) {
+        const { value: videoFrame, done } = await this.frameReader.read();
+        
+        if (done || !videoFrame) {
+          console.log('📹 Frame reader terminado');
+          break;
+        }
+
+        if (!this.encoder || this.encoder.state === 'closed') {
+          videoFrame.close();
+          break;
+        }
+
+        // Determinar si es keyframe (cada KEYFRAME_INTERVAL frames)
+        const isKeyFrame = this.frameCount % this.KEYFRAME_INTERVAL === 0;
+        
+        try {
+          this.encoder.encode(videoFrame, { keyFrame: isKeyFrame });
+        } catch (encodeError) {
+          console.error('Error encoding frame:', encodeError);
+        }
+        
+        videoFrame.close(); // Liberar memoria
+        this.frameCount++;
+      }
+    } catch (error) {
+      console.error('❌ Error en loop de encoding:', error);
+    } finally {
+      console.log('🎥 Loop de encoding finalizado');
+      if (this.isStreaming) {
+        this.stopStreaming();
+      }
+    }
+  }
+
+  // ============ CONTROLES UI ============
 
   updateResolution(scale: number) {
     this.resolutionScale = scale;
     if (!this.isStreaming) {
       this.startCamera();
-    } else {
-      console.log("Resolution changed. Will apply when camera restarts (e.g., after stopping/starting stream or changing facing mode).");
     }
   }
 
   updateQuality(scale: number) {
     this.qualityScale = scale;
-    // console.log(`🎨 Calidad ajustada: ${scale * 100}%`);
-    // IMPORTANTE: qualityScale no se aplica a MediaRecorder directamente,
-    // pero podés usarlo si hacés compresión manual más adelante (ej: canvas.toBlob)
   }
 
   rotateVideoSource(orientation: number) {
-    this.apiSigasigaRestService.rotateVideoSource(this.videoSourceName, orientation).subscribe((response) => {
-      // console.log(response);
+    if (!this.videoSourceName) return;
+    this.apiSigasigaRestService.rotateVideoSource(this.videoSourceName, orientation).subscribe({
+      next: (response) => console.log('✅ Video rotado'),
+      error: (error) => console.error('❌ Error rotando video:', error)
     });
-  }
-
-  shortIdBase64(length = 8) {
-    const array = new Uint8Array(length);
-    crypto.getRandomValues(array);
-    return btoa(String.fromCharCode(...array)).slice(0, length);
   }
 
   toggleFacingMode() {
     if (this.isStreaming) {
-      console.warn("Cannot change camera while streaming. Please stop the stream first.");
-      // Optionally, show a toast to the user.
+      console.warn('No se puede cambiar cámara mientras se transmite');
       return;
     }
     this.defaultFacingMode = this.defaultFacingMode === 'user' ? 'environment' : 'user';
     this.bps = this.defaultFacingMode === 'user' ? this.user_mode_bps : this.environment_mode_bps;
-    this.startCamera(); // Restart camera to apply new facing mode
+    this.startCamera();
+  }
+
+  private shortIdBase64(length = 8): string {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode(...array)).slice(0, length);
   }
 }
